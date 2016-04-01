@@ -104,11 +104,11 @@ library(foreach)
 
 registerDoParallel(cores = detectCores())
 
-kk <- 1
+kk <- 6
 if (kk > nrow(ssm)){
   kk <- nrow(ssm) - 1
 }
-rr <- 1
+rr <- 4
 iterSetting <- data.frame( sort(rep(seq(1, kk, length.out = kk), rr)) )
 
 results <- foreach(n = 1:nrow(iterSetting), 
@@ -116,7 +116,7 @@ results <- foreach(n = 1:nrow(iterSetting),
   library(ccube)
   k <- iterSetting[n, ]
   list(ccube_m6(ssm, epi=1e-3,
-         init=3, tol = 1e-10, maxiter = 1e3,
+         init=k, tol = 1e-10, maxiter = 1e3,
          fit_mult = T, fit_hyper = T, use = "use_base", verbose = F))
 }
 
