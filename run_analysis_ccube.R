@@ -1,4 +1,4 @@
-#!/Library/Frameworks/R.framework/Resources/Rscript
+#!/usr/bin/env Rscript
 
 library(dplyr)
 library(ccube)
