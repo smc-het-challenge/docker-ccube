@@ -14,7 +14,6 @@ args <- commandArgs(trailingOnly = TRUE)
 vcfFile <- as.character(args[1])
 batternbergFile <- as.character(args[2])
 
-#dir.create(sampleName, recursive = T)
 
 ssm_file <- "ssm_data.txt"
 cnv_file <- "cnv_data.txt"
@@ -79,9 +78,12 @@ if (nrow(cnv)>0) {
   ssm[is.na(ssm[,7]), 7] = 1
 }
 
-clonalCnFrac <- sum(ssm$cn_frac==1)/nrow(ssm)
-ssm <- dplyr::filter(ssm, cn_frac==1)
+allSsm <- dplyr::mutate(rowwise(ssm), chr =  strsplit(gene, split = "_")[[1]][1],
+                        pos = strsplit(gene, split = "_")[[1]][2]) 
 
+clonalCnFrac <- sum(allSsm$cn_frac==1)/nrow(allSsm)
+ssm <- dplyr::filter(allSsm, cn_frac==1 & !chr %in% c("x", "y") )
+problemSsm <- dplyr::filter(allSsm, cn_frac!=1 | chr %in% c("x", "y") )
 
 # maxSnv <- 30000
 # if (nrow(ssm) > maxSnv) {
@@ -102,7 +104,7 @@ library(foreach)
 
 registerDoParallel(cores = detectCores())
 
-kk <- 6
+kk <- 1
 if (kk > nrow(ssm)){
   kk <- nrow(ssm) - 1
 }
@@ -114,7 +116,7 @@ results <- foreach(n = 1:nrow(iterSetting),
   library(ccube)
   k <- iterSetting[n, ]
   list(ccube_m6(ssm, epi=1e-3,
-         init=k, tol = 1e-10, maxiter = 1e3,
+         init=3, tol = 1e-10, maxiter = 1e3,
          fit_mult = T, fit_hyper = T, use = "use_base", verbose = F))
 }
 
@@ -131,39 +133,111 @@ ssm <- mutate(rowwise(ssm),
                           major_cn + minor_cn,
                           major_cn + minor_cn,
                           ccube_mult,
-                          constraint=F) )
+                          constraint=F))
 
 uniqLabels <- unique(res$label)
 write.table(length(uniqLabels), file = "1B.txt", sep = "\t", row.names = F, col.names=F, quote = F)
 
+if (length(uniqLabels) == 1) {
+  mutR = data.frame(res$R)
+  colnames(mutR) <- "cluster_1"
+} else {
+  mutR <- data.frame(res$R[, sort(uniqLabels)]) 
+  colnames(mutR) <- paste0("cluster_", seq_along(uniqLabels))
+}
 
-clusterCertainty <- as.data.frame(table(res$label), stringsAsFactors = F)
+ssm <- cbind(ssm, mutR)
+ssm$label <- apply(mutR, 1, which.max)
+
+
+## Post assign problem SSMs-- temporal solution
+
+MapVaf2CcfTest <- function(x, t, cv, bv, frac,
+                              epi = 1e-3, constraint = T,
+                              lower = -Inf, upper = Inf) {
+  
+  if(bv==0) {
+    return(0)
+  }
+  
+  cn2 = 2
+  zz = (1-t)*2 + t*(frac*cv + (1-frac)*2 )
+  
+  
+  ccf <- ( x * zz - t*(1-frac)*2*epi - (1-t) *2*epi - t*frac*cv*epi  ) /
+    ( t*frac*( bv *(1-epi) - cv*epi ) )
+  
+  if (constraint) {
+    if (is.na(ccf)) {
+      return(as.numeric(NA))
+    } else if (ccf < 0.9 && bv > 1) {
+      return(as.numeric(NA))
+    } else if (ccf < upper && ccf > lower) {
+      return(ccf)
+    } else {
+      return(as.numeric(NA))
+    }
+  } else {
+    return(ccf)
+  }
+}
+
+problemSsm$normal_cn <- 2
+problemSsm$purity <- cellularity
+problemSsm$mutation_id <- problemSsm$gene
+problemSsm <- rename(problemSsm, ref_counts = a, total_counts = d)
+problemSsm <- mutate(rowwise(problemSsm), 
+                     var_counts = total_counts - ref_counts, 
+                     vaf = var_counts/total_counts,
+                     ccf1 = MapVaf2CcfTest(var_counts/total_counts, 
+                                           purity, 
+                                           major_cn+minor_cn, 
+                                           major_cn, cn_frac, constraint = F), 
+                     ccf2 = MapVaf2CcfTest(var_counts/total_counts, 
+                                           purity, 
+                                           major_cn+minor_cn, 
+                                           minor_cn, cn_frac, constraint = F),
+                     ccf3 = MapVaf2CcfTest(var_counts/total_counts, 
+                                           purity, 
+                                           major_cn+minor_cn, 
+                                           1, cn_frac, constraint = F), 
+                     ccube_ccf = mean( unique( c(ccf1, ccf2, ccf3)) ) )
+
+postAssign <- kmeans(problemSsm$ccube_ccf, centers = res$mu[sort(uniqLabels)])
+postLabel <- postAssign$cluster
+postR <- as.matrix(Matrix::sparseMatrix(1:nrow(problemSsm), postLabel, x=1))
+problemSsm$ccube_ccf_mean <- res$mu[uniqLabels][postLabel]
+problemSsm <- mutate(problemSsm, ccube_mult = mean( unique( c(major_cn, minor_cn, 1) ) ) )
+problemSsm$ccf1 <- NULL
+problemSsm$ccf2 <- NULL
+problemSsm$ccf3 <- NULL
+postR <- data.frame(postR) 
+colnames(postR) <- paste0("cluster_", seq_along(sort(uniqLabels)))
+problemSsm <- cbind(problemSsm, postR)
+
+problemSsm$label <- apply(postR, 1, which.max)
+
+tt <- rbind(ssm, problemSsm)
+tt <- tt[order(as.numeric(gsub("[^\\d]+", "", tt$id, perl=TRUE))), ]
+
+
+
+clusterCertainty <- as.data.frame(table(tt$label), stringsAsFactors = F)
 clusterCertainty <- rename(clusterCertainty, cluster = Var1, n_ssms = Freq)
-clusterCertainty$proportion <- res$mu[as.integer(clusterCertainty$cluster)] * cellularity
+clusterCertainty$proportion <- res$mu[sort(uniqLabels)][as.integer(clusterCertainty$cluster)] * cellularity
 clusterCertainty$cluster <- seq_along(uniqLabels) 
 
 write.table(clusterCertainty, file = "1C.txt", sep = "\t", row.names = F, col.names=F, quote = F)
 
+write.table(tt$label, file = "2A.txt", sep = "\t", row.names = F, col.names=F, quote = F)
 
-
-if (length(uniqLabels) == 1) {
-  mutR = data.frame(res$R)
-  colnames(mutR) <- 1
-} else {
-  mutR <- data.frame(res$R[, sort(uniqLabels)]) 
-  colnames(mutR) <- seq_along(uniqLabels)
-}
-
-label <- apply(mutR, 1, which.max)
-write.table(label, file = "2A.txt", sep = "\t", row.names = F, col.names=F, quote = F)
-
-
-coAssign <- Matrix::tcrossprod(res$R[, sort(uniqLabels)])
+RR = as.matrix(tt[, paste0("cluster_", seq_along(sort(uniqLabels)))])
+coAssign <- Matrix::tcrossprod(RR)
 diag(coAssign) <- 1
 write.table(coAssign, file = "2B.txt", sep = "\t", row.names = F, col.names=F, quote = F)
 
 # summary graph
-fn = "results_summary.pdf"
+fn = "clonal_results_summary.pdf"
 ppi <- 500
 pdf(fn, width=8, height=8)
 par(mfrow=c(2,2))

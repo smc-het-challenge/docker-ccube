@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 
+
 library(dplyr)
 library(ccube)
 
@@ -10,9 +11,9 @@ gg_color_hue <- function(n) {
 }
 myColors <- gg_color_hue(10)
 
-# args <- commandArgs(trailingOnly = TRUE)
-# vcfFile <- as.character(args[1])
-# batternbergFile <- as.character(args[2])
+args <- commandArgs(trailingOnly = TRUE)
+vcfFile <- as.character(args[1])
+batternbergFile <- as.character(args[2])
 
 vcfFile <- "Tumour2/Tumour2.mutect.vcf"
 batternbergFile <- "Tumour2/Tumour2.battenberg.txt"
@@ -81,9 +82,11 @@ if (nrow(cnv)>0) {
   ssm[is.na(ssm[,7]), 7] = 1
 }
 
-clonalCnFrac <- sum(ssm$cn_frac==1)/nrow(ssm)
-ssm <- dplyr::filter(ssm, cn_frac==1)
+allSsm <- dplyr::mutate(rowwise(ssm), chr =  strsplit(gene, split = "_")[[1]][1],
+                        pos = strsplit(gene, split = "_")[[1]][2]) 
 
+clonalCnFrac <- sum(allSsm$cn_frac==1)/nrow(allSsm)
+ssm <- dplyr::filter(allSsm, cn_frac==1 & !chr %in% c("x", "y") )
 
 # maxSnv <- 30000
 # if (nrow(ssm) > maxSnv) {

@@ -47,7 +47,7 @@ class VariantParser(object):
     if chrom in [str(i) for i in range(1, 23)]:
       return True
     else:
-      return False
+      return True
 
   def _does_variant_pass_filters(self, variant):
     if variant.FILTER is None:
@@ -794,7 +794,8 @@ def main():
   if args.only_normal_cn:
     grouper.retain_only_variants_in_normal_cn_regions()
   elif grouper.has_cnvs():
-    grouper.exclude_variants_in_subclonal_cnvs()
+    pass
+    #grouper.exclude_variants_in_subclonal_cnvs()
 
   if args.sample_size:
     grouper.subsample_variants(args.sample_size)
