@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript
+#!/Library/Frameworks/R.framework/Resources/Rscript
 
 library(dplyr)
 library(ccube)
@@ -10,9 +10,13 @@ gg_color_hue <- function(n) {
 }
 myColors <- gg_color_hue(10)
 
-args <- commandArgs(trailingOnly = TRUE)
-vcfFile <- as.character(args[1])
-batternbergFile <- as.character(args[2])
+# args <- commandArgs(trailingOnly = TRUE)
+# vcfFile <- as.character(args[1])
+# batternbergFile <- as.character(args[2])
+
+vcfFile <- "Tumour2/Tumour2.mutect.vcf"
+batternbergFile <- "Tumour2/Tumour2.battenberg.txt"
+
 
 ssm_file <- "ssm_data.txt"
 cnv_file <- "cnv_data.txt"

@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript
+#!/Library/Frameworks/R.framework/Resources/Rscript
 
 library(dplyr)
 library(ccube)
@@ -106,7 +106,7 @@ kk <- 6
 if (kk > nrow(ssm)){
   kk <- nrow(ssm) - 1
 }
-rr <- 2
+rr <- 1
 iterSetting <- data.frame( sort(rep(seq(1, kk, length.out = kk), rr)) )
 
 results <- foreach(n = 1:nrow(iterSetting), 
@@ -134,33 +134,36 @@ ssm <- mutate(rowwise(ssm),
                           constraint=F) )
 
 uniqLabels <- unique(res$label)
+write.table(length(uniqLabels), file = "1B.txt", sep = "\t", row.names = F, col.names=F, quote = F)
 
-id <- Reduce(rbind, strsplit(as.character(ssm$gene), "_", fixed = T), c())
 
 clusterCertainty <- as.data.frame(table(res$label), stringsAsFactors = F)
 clusterCertainty <- rename(clusterCertainty, cluster = Var1, n_ssms = Freq)
 clusterCertainty$proportion <- res$mu[as.integer(clusterCertainty$cluster)] * cellularity
 clusterCertainty$cluster <- seq_along(uniqLabels) 
 
-fn <- "1C.txt"
-write.table(clusterCertainty, file = fn, sep = "\t", row.names = F, col.names=F, quote = F)
+write.table(clusterCertainty, file = "1C.txt", sep = "\t", row.names = F, col.names=F, quote = F)
 
 
-mutAssign <- data.frame(chr = id[,1], pos = id[,2])
+
 if (length(uniqLabels) == 1) {
   mutR = data.frame(res$R)
-  colnames(mutR) <- "cluster_1"
+  colnames(mutR) <- 1
 } else {
   mutR <- data.frame(res$R[, sort(uniqLabels)]) 
-  colnames(mutR) <- paste0("cluster_", seq_along(uniqLabels))
+  colnames(mutR) <- seq_along(uniqLabels)
 }
 
-mutAssign <- data.frame(mutAssign, mutR)
-fn <- "2B.txt"
-write.table(mutAssign, file = fn, sep = "\t", row.names = F, col.names=F, quote = F)
+label <- apply(mutR, 1, which.max)
+write.table(label, file = "2A.txt", sep = "\t", row.names = F, col.names=F, quote = F)
+
+
+coAssign <- Matrix::tcrossprod(res$R[, sort(uniqLabels)])
+diag(coAssign) <- 1
+write.table(coAssign, file = "2B.txt", sep = "\t", row.names = F, col.names=F, quote = F)
 
 # summary graph
-fn = "_results_summary.pdf"
+fn = "results_summary.pdf"
 ppi <- 500
 pdf(fn, width=8, height=8)
 par(mfrow=c(2,2))
