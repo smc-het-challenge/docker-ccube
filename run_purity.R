@@ -15,8 +15,8 @@ args <- commandArgs(trailingOnly = TRUE)
 vcfFile <- as.character(args[1])
 batternbergFile <- as.character(args[2])
 
-vcfFile <- "Tumour2/Tumour2.mutect.vcf"
-batternbergFile <- "Tumour2/Tumour2.battenberg.txt"
+#vcfFile <- "Tumour2/Tumour2.mutect.vcf"
+#batternbergFile <- "Tumour2/Tumour2.battenberg.txt"
 
 
 ssm_file <- "ssm_data.txt"
