@@ -25,6 +25,7 @@ RUN apt-get -qq update \
     		libreadline-dev \
 		&& pip install distribute --upgrade \
 		&& pip install \
+            cython \
 			pysam \ 
 			pyvcf \
 		&& apt-get autoremove -y \
