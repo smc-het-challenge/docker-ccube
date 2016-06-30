@@ -239,7 +239,7 @@ postR <- data.frame(postR)
 colnames(postR) <- paste0("cluster_", seq_along(sort(uniqLabels)))
 problemSsm <- cbind(problemSsm, postR)
 
-problemSsm$label <- sort(uniqLabels)[postLabel]
+problemSsm$label <- postLabel
 
 tt <- rbind(ssm, problemSsm)
 tt <- tt[order(as.numeric(gsub("[^\\d]+", "", tt$id, perl=TRUE))), ]
