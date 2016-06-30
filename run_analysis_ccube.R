@@ -139,7 +139,7 @@ uniqLabels <- unique(res$label)
 write.table(length(uniqLabels), file = "1B.txt", sep = "\t", row.names = F, col.names=F, quote = F)
 
 if (length(uniqLabels) == 1) {
-  mutR = data.frame(res$R)
+  mutR <- data.frame(res$R[, sort(uniqLabels)])
   colnames(mutR) <- "cluster_1"
 } else {
   mutR <- data.frame(res$R[, sort(uniqLabels)]) 
@@ -182,6 +182,28 @@ MapVaf2CcfTest <- function(x, t, cv, bv, frac,
   }
 }
 
+Assign <- function(x, centers, s) {
+  
+  n <- length(x)
+  
+  k <- length(centers)
+  
+  logRho <- array(0, dim= c(n ,k))
+  
+  for (ii in 1:k) {
+    logRho[,ii] = ccube::bsxfun.se("-", -(x-centers[ii])^2/(2*s[ii]), log(s[ii]))
+  }
+  
+  if (n==k) {
+    logR <- ccube::bsxfun.se("-", logRho, ccube:::logsumexp(logRho, 1), expandByRow = F)  # 10.49
+  } else {
+    logR <- ccube::bsxfun.se("-", logRho, ccube:::logsumexp(logRho, 1)) # 10.49
+  }
+  
+  R <- exp(logR)
+  
+} 
+
 problemSsm$normal_cn <- 2
 problemSsm$purity <- cellularity
 problemSsm$mutation_id <- problemSsm$gene
@@ -203,10 +225,12 @@ problemSsm <- mutate(rowwise(problemSsm),
                                            1, cn_frac, constraint = F), 
                      ccube_ccf = mean( unique( c(ccf1, ccf2, ccf3)) ) )
 
-postAssign <- kmeans(problemSsm$ccube_ccf, centers = res$mu[sort(uniqLabels)])
-postLabel <- postAssign$cluster
-postR <- as.matrix(Matrix::sparseMatrix(1:nrow(problemSsm), postLabel, x=1))
-problemSsm$ccube_ccf_mean <- res$mu[uniqLabels][postLabel]
+
+
+postR <- Assign(problemSsm$ccube_ccf, res$mu[sort(unique(res$label))], 
+                     rep(res$full.model$invWhishartScale, length(unique(res$label))))
+postLabel <- apply(postR, 1, which.max)
+problemSsm$ccube_ccf_mean <- res$mu[sort(uniqLabels)][postLabel]
 problemSsm <- mutate(problemSsm, ccube_mult = mean( unique( c(major_cn, minor_cn, 1) ) ) )
 problemSsm$ccf1 <- NULL
 problemSsm$ccf2 <- NULL
@@ -215,7 +239,7 @@ postR <- data.frame(postR)
 colnames(postR) <- paste0("cluster_", seq_along(sort(uniqLabels)))
 problemSsm <- cbind(problemSsm, postR)
 
-problemSsm$label <- apply(postR, 1, which.max)
+problemSsm$label <- sort(uniqLabels)[postLabel]
 
 tt <- rbind(ssm, problemSsm)
 tt <- tt[order(as.numeric(gsub("[^\\d]+", "", tt$id, perl=TRUE))), ]
