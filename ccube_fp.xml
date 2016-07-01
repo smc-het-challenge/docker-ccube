@@ -1,4 +1,4 @@
-<tool id="ccube" name="Ccube Tool: Standard" version="0.1.0">
+<tool id="ccube_fp" name="Ccube Tool: Standard - Filter FP" version="0.1.0">
 
     <requirements>
         <container type="docker">docker-ccube</container>
@@ -9,7 +9,7 @@
     </stdio>
 
     <command><![CDATA[
-        run_analysis_ccube.R
+        run_analysis_ccube_1.R
         $(input_vcf)
         $(battenberg_file)
     ]]></command>
