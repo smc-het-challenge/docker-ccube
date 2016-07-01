@@ -99,30 +99,33 @@ write.table(cellularity, file = "1A.txt", sep = "\t", row.names = F,
   col.names = F, quote = F)
 
 
-library(doParallel)
-library(foreach)
+# library(doParallel)
+# library(foreach)
 
-registerDoParallel(cores = detectCores())
+# registerDoParallel(cores = detectCores())
 
-kk <- 6
-if (kk > nrow(ssm)){
-  kk <- nrow(ssm) - 1
-}
-rr <- 4
-iterSetting <- data.frame( sort(rep(seq(1, kk, length.out = kk), rr)) )
+# kk <- 6
+# if (kk > nrow(ssm)){
+#   kk <- nrow(ssm) - 1
+# }
+# rr <- 4
+# iterSetting <- data.frame( sort(rep(seq(1, kk, length.out = kk), rr)) )
 
-results <- foreach(n = 1:nrow(iterSetting), 
-  .combine = c, .packages = "ccube") %dopar% {
-  library(ccube)
-  k <- iterSetting[n, ]
-  list(ccube_m6(ssm, epi=1e-3,
-         init=k, tol = 1e-10, maxiter = 1e3,
-         fit_mult = T, fit_hyper = T, use = "use_base", verbose = F))
-}
+# results <- foreach(n = 1:nrow(iterSetting), 
+#   .combine = c, .packages = "ccube") %dopar% {
+#   library(ccube)
+#   k <- iterSetting[n, ]
+#   list(ccube_m6(ssm, epi=1e-3,
+#          init=k, tol = 1e-10, maxiter = 1e3,
+#          fit_mult = T, fit_hyper = T, use = "use_base", verbose = F))
+# }
 
-maxLbIndex <- which.max(Map( function(x) max(x$L), results))
-lb <- unlist(Map( function(x) max(x$L), results))
-res <- results[[maxLbIndex]]
+# maxLbIndex <- which.max(Map( function(x) max(x$L), results))
+# lb <- unlist(Map( function(x) max(x$L), results))
+# res <- results[[maxLbIndex]]
+res = ccube_m6(ssm, epi=1e-3,
+               init=6, tol = 1e-10, maxiter = 1e3,
+               fit_mult = T, fit_hyper = F, use = "use_base", verbose = F)
 ssm$ccube_ccf_mean <- res$mu[res$label]
 ssm$ccube_mult <- res$full.model$bv  
 ssm <- mutate(rowwise(ssm),
