@@ -117,7 +117,7 @@ results <- foreach(n = 1:nrow(iterSetting),
   k <- iterSetting[n, ]
   list(ccube_m6(ssm, epi=1e-3,
          init=k, tol = 1e-10, maxiter = 1e3,
-         fit_mult = T, fit_hyper = T, use = "use_base", verbose = F))
+         fit_mult = T, fit_hyper = F, use = "use_base", verbose = F))
 }
 
 maxLbIndex <- which.max(Map( function(x) max(x$L), results))
