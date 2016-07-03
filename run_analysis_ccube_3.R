@@ -151,8 +151,8 @@ if (length(uniqLabels) > 1 & min(ssm$ccube_ccf_mean) < 0.3) {
 
 
 
-if (length(uniqLabels) == 1) {
-  mutR <- data.frame(res$R[, sort(uniqLabels)])
+if (!is.matrix(res$R)) {
+  mutR <- data.frame(res$R)
   colnames(mutR) <- "cluster_1"
 } else {
   mutR <- data.frame(res$R[, sort(uniqLabels)]) 

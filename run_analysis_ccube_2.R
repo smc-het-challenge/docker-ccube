@@ -144,8 +144,8 @@ uniqLabels <- unique(res$label)
 
 write.table(length(uniqLabels), file = "1B.txt", sep = "\t", row.names = F, col.names=F, quote = F)
 
-if (length(uniqLabels) == 1) {
-  mutR <- data.frame(res$R[, sort(uniqLabels)])
+if (!is.matrix(res$R)) {
+  mutR <- data.frame(res$R)
   colnames(mutR) <- "cluster_1"
 } else {
   mutR <- data.frame(res$R[, sort(uniqLabels)]) 
