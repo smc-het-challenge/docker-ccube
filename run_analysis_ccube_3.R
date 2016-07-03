@@ -217,47 +217,54 @@ Assign <- function(x, centers, s) {
   
 } 
 
-problemSsm$normal_cn <- 2
-problemSsm$purity <- cellularity
-problemSsm$mutation_id <- problemSsm$gene
-problemSsm <- rename(problemSsm, ref_counts = a, total_counts = d)
-problemSsm <- mutate(rowwise(problemSsm), 
-                     var_counts = total_counts - ref_counts, 
-                     vaf = var_counts/total_counts,
-                     ccf1 = MapVaf2CcfTest(var_counts/total_counts, 
-                                           purity, 
-                                           major_cn+minor_cn, 
-                                           major_cn, cn_frac, constraint = F), 
-                     ccf2 = MapVaf2CcfTest(var_counts/total_counts, 
-                                           purity, 
-                                           major_cn+minor_cn, 
-                                           minor_cn, cn_frac, constraint = F),
-                     ccf3 = MapVaf2CcfTest(var_counts/total_counts, 
-                                           purity, 
-                                           major_cn+minor_cn, 
-                                           1, cn_frac, constraint = F), 
-                     ccube_ccf = mean( unique( c(ccf1, ccf2, ccf3)) ) )
+if (nrow(problemSsm) > 0) {
+  
+  problemSsm$normal_cn <- 2
+  problemSsm$purity <- cellularity
+  problemSsm$mutation_id <- problemSsm$gene
+  problemSsm <- rename(problemSsm, ref_counts = a, total_counts = d)
+  problemSsm <- mutate(rowwise(problemSsm), 
+                       var_counts = total_counts - ref_counts, 
+                       vaf = var_counts/total_counts,
+                       ccf1 = MapVaf2CcfTest(var_counts/total_counts, 
+                                             purity, 
+                                             major_cn+minor_cn, 
+                                             major_cn, cn_frac, constraint = F), 
+                       ccf2 = MapVaf2CcfTest(var_counts/total_counts, 
+                                             purity, 
+                                             major_cn+minor_cn, 
+                                             minor_cn, cn_frac, constraint = F),
+                       ccf3 = MapVaf2CcfTest(var_counts/total_counts, 
+                                             purity, 
+                                             major_cn+minor_cn, 
+                                             1, cn_frac, constraint = F), 
+                       ccube_ccf = mean( unique( c(ccf1, ccf2, ccf3)) ) )
 
 
 
-postR <- Assign(problemSsm$ccube_ccf, res$mu[sort(unique(res$label))], 
-                     rep(res$full.model$invWhishartScale, length(unique(res$label))))
-postLabel <- apply(postR, 1, which.max)
-problemSsm$ccube_ccf_mean <- res$mu[sort(uniqLabels)][postLabel]
-problemSsm <- mutate(problemSsm, ccube_mult = mean( unique( c(major_cn, minor_cn, 1) ) ) )
-problemSsm$ccf1 <- NULL
-problemSsm$ccf2 <- NULL
-problemSsm$ccf3 <- NULL
-postR <- data.frame(postR) 
-colnames(postR) <- paste0("cluster_", seq_along(sort(uniqLabels)))
-problemSsm <- cbind(problemSsm, postR)
+  postR <- Assign(problemSsm$ccube_ccf, res$mu[sort(unique(res$label))], 
+                       rep(res$full.model$invWhishartScale, length(unique(res$label))))
+  postLabel <- apply(postR, 1, which.max)
+  problemSsm$ccube_ccf_mean <- res$mu[sort(uniqLabels)][postLabel]
+  problemSsm <- mutate(problemSsm, ccube_mult = mean( unique( c(major_cn, minor_cn, 1) ) ) )
+  problemSsm$ccf1 <- NULL
+  problemSsm$ccf2 <- NULL
+  problemSsm$ccf3 <- NULL
+  postR <- data.frame(postR) 
+  colnames(postR) <- paste0("cluster_", seq_along(sort(uniqLabels)))
+  problemSsm <- cbind(problemSsm, postR)
 
-problemSsm$label <- postLabel
+  problemSsm$label <- postLabel
 
-tt <- rbind(ssm, problemSsm)
+  tt <- rbind(ssm, problemSsm)
+
+} else {
+
+  tt <- ssm
+
+}
+
 tt <- tt[order(as.numeric(gsub("[^\\d]+", "", tt$id, perl=TRUE))), ]
-
-
 
 clusterCertainty <- as.data.frame(table(tt$label), stringsAsFactors = F)
 clusterCertainty <- rename(clusterCertainty, cluster = Var1, n_ssms = Freq)
