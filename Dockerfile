@@ -72,13 +72,11 @@ COPY ./run_analysis_ccube_1.R /home/pipeline/run_analysis_ccube_1.R
 COPY ./run_analysis_ccube_2.R /home/pipeline/run_analysis_ccube_2.R
 COPY ./run_analysis_ccube_3.R /home/pipeline/run_analysis_ccube_3.R
 COPY ./run_purity.R /home/pipeline/run_purity.R
-COPY ./run_analysis_ccube_2_test.R /home/pipeline/run_analysis_ccube_2_test.R
 
 RUN chmod +x /home/pipeline/create_ccfclust_inputs.py \
     && chmod +x /home/pipeline/run_analysis_ccube.R \
     && chmod +x /home/pipeline/run_analysis_ccube_1.R \
     && chmod +x /home/pipeline/run_analysis_ccube_2.R \
-    && chmod +x /home/pipeline/run_analysis_ccube_2_test.R \
     && chmod +x /home/pipeline/run_analysis_ccube_3.R \
     && chmod +x /home/pipeline/run_purity.R
 
