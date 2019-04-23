@@ -76,7 +76,7 @@ numOfClusterPool = 1:7
 numOfRepeat = 5
 ccubeRes <- RunCcubePipeline(ssm = ssm, 
                              numOfClusterPool = numOfClusterPool, numOfRepeat = numOfRepeat,
-                             runAnalysis = T, runQC = T)
+                             runAnalysis = T, runQC = T, multiCore = T)
 
 MakeCcubeStdPlot(ccubeRes$ssm, ccubeRes$res)
 
