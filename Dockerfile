@@ -1,6 +1,7 @@
 FROM ubuntu
 MAINTAINER "Ke Yuan" ke.yuan.09@gmail.com
 
+ENV DEBIAN_FRONTEND=noninteractive 
 RUN apt-get -qq update \
         && apt-get install --no-install-recommends -y \
             libcurl4-openssl-dev \ 
@@ -53,8 +54,7 @@ RUN apt-get -qq update \
 RUN install.r \
     doParallel \
     foreach \
-    devtools \
-    mcclust 
+    devtools 
     
 RUN installGithub.r \
     keyuan/ccube \
@@ -67,6 +67,7 @@ RUN install.r \
 RUN mkdir /home/pipeline
 
 COPY ./create_ccfclust_inputs.py /home/pipeline/create_ccfclust_inputs.py
+COPY ./run_analysis_ccube.R /home/pipeline/run_analysis_ccube_test.R
 COPY ./run_analysis_ccube.R /home/pipeline/run_analysis_ccube.R
 COPY ./run_analysis_ccube_1.R /home/pipeline/run_analysis_ccube_1.R
 COPY ./run_analysis_ccube_2.R /home/pipeline/run_analysis_ccube_2.R
@@ -74,12 +75,11 @@ COPY ./run_analysis_ccube_3.R /home/pipeline/run_analysis_ccube_3.R
 COPY ./run_purity.R /home/pipeline/run_purity.R
 
 RUN chmod +x /home/pipeline/create_ccfclust_inputs.py \
+    && chmod +x /home/pipeline/run_analysis_ccube_test.R \
     && chmod +x /home/pipeline/run_analysis_ccube.R \
     && chmod +x /home/pipeline/run_analysis_ccube_1.R \
     && chmod +x /home/pipeline/run_analysis_ccube_2.R \
     && chmod +x /home/pipeline/run_analysis_ccube_3.R \
     && chmod +x /home/pipeline/run_purity.R
-
-
 
 ENV PATH=/home/pipeline:$PATH
