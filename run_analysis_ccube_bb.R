@@ -19,7 +19,7 @@ purityFile <- as.character(args[3])
 ssm_file <- "ssm_data.txt"
 
 # Parse vcf file
-vcfParserPath <- dir(path = getwd(), pattern = "create_ccfclust_inputs.py", full.names = T)
+vcfParserPath <- "create_ccfclust_inputs.py"
 shellCommandMutectSmcHet <- paste(
   vcfParserPath,
   " -v mutect_smchet",
