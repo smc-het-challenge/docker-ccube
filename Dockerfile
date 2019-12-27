@@ -54,9 +54,10 @@ RUN apt-get -qq update \
 RUN install.r \
     doParallel \
     foreach \
-    devtools 
+#    devtools 
     
 RUN installGithub.r \
+    r-lib/devtools \
     keyuan/ccube \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
