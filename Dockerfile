@@ -50,7 +50,9 @@ RUN apt-get -qq update \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
     && rm -rf /var/lib/apt/lists/*
 
-RUN Rscript -e 'install.packages("devtools")'
+RUN Rscript -e 'install.packages("devtools")' \
+    && Rscript -e 'install.packages("dplyr")' \
+    && Rscript -e 'install.packages("mcclust")'
 
 RUN install.r \
     doParallel \
