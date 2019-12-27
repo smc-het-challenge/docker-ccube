@@ -50,16 +50,13 @@ RUN apt-get -qq update \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
     && rm -rf /var/lib/apt/lists/*
 
-RUN Rscript -e 'install.packages("dplyr")' \
-    && Rscript -e 'install.packages("mcclust")'
-
-RUN install.r \
-    doParallel \
-    foreach \
-    
-RUN installGithub.r \
-    keyuan/ccube \
-    r-lib/devtools \
+RUN Rscript -e 'install.packages("devtools")' \
+    && Rscript -e 'require(devtools)' \
+    && Rscript -e 'install.packages("dplyr")' \
+    && Rscript -e 'install.packages("mcclust")' \
+    && Rscript -e 'install.packages("doParallel")' \
+    && Rscript -e 'install.packages("foreach")' \
+    && Rscript -e 'install_github("keyuan/ccube")' \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 RUN install.r \
