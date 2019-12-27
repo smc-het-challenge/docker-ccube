@@ -50,16 +50,15 @@ RUN apt-get -qq update \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
     && rm -rf /var/lib/apt/lists/*
 
-RUN install.r \
-    devtools \
-    && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
-
-RUN Rscript -e 'require(devtools)' \
+RUN Rscript -e 'install.packages("xml2")' \
+    && Rscript -e 'install.packages("rversions")' \
+    && Rscript -e 'install.packages("roxygen2")' \
     && Rscript -e 'install.packages("dplyr")' \
     && Rscript -e 'install.packages("mcclust")' \
     && Rscript -e 'install.packages("doParallel")' \
-    && Rscript -e 'install.packages("foreach")'
-    
+    && Rscript -e 'install.packages("foreach")'\
+    && Rscript -e 'install.packages("devtools")'
+
 RUN Rscript -e 'devtools::install_github("keyuan/ccube")' \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
