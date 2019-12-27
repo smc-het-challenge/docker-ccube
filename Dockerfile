@@ -50,8 +50,7 @@ RUN apt-get -qq update \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
     && rm -rf /var/lib/apt/lists/*
 
-RUN Rscript -e 'install.packages("devtools")' \
-    && Rscript -e 'install.packages("dplyr")' \
+RUN Rscript -e 'install.packages("dplyr")' \
     && Rscript -e 'install.packages("mcclust")'
 
 RUN install.r \
@@ -60,6 +59,7 @@ RUN install.r \
     
 RUN installGithub.r \
     keyuan/ccube \
+    r-lib/devtools \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 RUN install.r \
