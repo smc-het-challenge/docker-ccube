@@ -17,6 +17,11 @@ inputs:
     inputBinding:
       position: 2
 
+  purity_file:
+    type: File
+    inputBinding:
+      position:3
+
 outputs:
   cellularity:
     type: [File, "null"]
