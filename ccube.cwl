@@ -1,10 +1,10 @@
 cwlVersion: v1.0
 class: CommandLineTool
 label: ccube
-baseCommand: ["Rscript", "/home/pipeline/run_analysis_ccube.R"]
+baseCommand: ["Rscript", "/home/pipeline/run_analysis_ccube_bb.R"]
 requirements:
   - class: DockerRequirement
-    dockerPull: smcheteval/ccube:0.1
+    dockerPull: smcheteval/ccube:0.2
 
 inputs:
   input_vcf:
@@ -19,26 +19,26 @@ inputs:
 
 outputs:
   cellularity:
-    type: File
+    type: [File, "null"]
     outputBinding:
       glob: 1A.txt
 
   population:
-    type: File
+    type: [File, "null"]
     outputBinding:
       glob: 1B.txt
 
   proportion:
-    type: File
+    type: [File, "null"]
     outputBinding:
       glob: 1C.txt
 
   cluster_assignment:
-    type: File
+    type: [File, "null"]
     outputBinding:
       glob: 2A.txt
 
   cocluster_assignment:
-    type: File
+    type: [File, "null"]
     outputBinding:
       glob: 2B.txt

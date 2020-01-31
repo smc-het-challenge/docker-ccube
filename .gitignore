@@ -5,3 +5,8 @@
 .Rproj
 *.txt
 .DS_Store
+*backup
+run_analysis_ccube_1.R
+run_analysis_ccube_2.R
+run_analysis_ccube_3.R
+run_purity.R
